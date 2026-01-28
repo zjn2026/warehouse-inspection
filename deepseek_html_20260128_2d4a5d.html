@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓库安全检查点检系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 手机优化样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header i {
+            font-size: 50px;
+            color: #1a73e8;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            color: #1a73e8;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        
+        .check-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1a73e8;
+        }
+        
+        .check-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .check-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .option-btn {
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .option-btn.selected {
+            font-weight: bold;
+            transform: scale(0.98);
+        }
+        
+        .option-normal.selected {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .option-abnormal.selected {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        .option-na.selected {
+            background: #f5f5f5;
+            border-color: #9e9e9e;
+            color: #616161;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            background: #2e9750;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52,168,83,0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-message i {
+            font-size: 60px;
+            color: #34a853;
+            margin-bottom: 20px;
+        }
+        
+        .qr-section {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: #f5f5f5;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px dashed #ccc;
+        }
+        
+        .admin-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .check-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app-container">
+        <!-- 点检表单 -->
+        <div class="header">
+            <i class="fas fa-clipboard-check"></i>
+            <h1>仓库安全点检</h1>
+            <p class="subtitle">请完成以下安全检查项目</p>
+        </div>
+        
+        <form id="inspection-form">
+            <div class="form-group">
+                <label for="employee-name">点检人姓名</label>
+                <input type="text" id="employee-name" required placeholder="请输入您的姓名">
+            </div>
+            
+            <div class="form-group">
+                <label for="employee-id">工号</label>
+                <input type="text" id="employee-id" placeholder="请输入工号(可选)">
+            </div>
+            
+            <div class="form-group">
+                <label for="warehouse-area">仓库区域</label>
+                <select id="warehouse-area" required>
+                    <option value="">请选择区域</option>
+                    <option value="A区-原材料仓">A区 - 原材料仓库</option>
+                    <option value="B区-成品仓">B区 - 成品仓库</option>
+                    <option value="C区-危险品仓">C区 - 危险品仓库</option>
+                    <option value="D区-工具仓">D区 - 工具仓库</option>
+                    <option value="E区-设备仓">E区 - 设备仓库</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="check-time">点检时间</label>
+                <input type="datetime-local" id="check-time" required>
+            </div>
+            
+            <div id="checklist-container">
+                <!-- 检查项将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="form-group">
+                <label for="remarks">备注</label>
+                <textarea id="remarks" rows="3" placeholder="如有异常情况请在此说明..."></textarea>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                <i class="fas fa-paper-plane"></i> 提交点检记录
+            </button>
+        </form>
+        
+        <!-- 成功提示 -->
+        <div class="success-message" id="success-message" style="display: none;">
+            <i class="fas fa-check-circle"></i>
+            <h2>点检提交成功！</h2>
+            <p id="result-details"></p>
+            <button class="submit-btn" onclick="location.reload()" style="background: #1a73e8; margin-top: 20px;">
+                <i class="fas fa-redo"></i> 继续点检
+            </button>
+        </div>
+    </div>
+    
+    <!-- Google Sheets API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        // 检查项配置
+        const checkItems = [
+            {
+                id: 1,
+                title: "消防设施检查",
+                desc: "灭火器、消防栓、消防通道是否正常",
+                required: true
+            },
+            {
+                id: 2,
+                title: "电气安全检查",
+                desc: "电线、配电箱、电气设备是否安全",
+                required: true
+            },
+            {
+                id: 3,
+                title: "物料堆放检查",
+                desc: "物料堆放是否稳固，通道是否畅通",
+                required: true
+            },
+            {
+                id: 4,
+                title: "安全标识检查",
+                desc: "安全警示标识是否清晰完好",
+                required: true
+            },
+            {
+                id: 5,
+                title: "仓储设备检查",
+                desc: "叉车、货架等设备是否完好",
+                required: true
+            },
+            {
+                id: 6,
+                title: "环境安全检查",
+                desc: "地面是否清洁，有无积水油污",
+                required: false
+            }
+        ];
+        
+        // 初始化检查项
+        function initChecklist() {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+            
+            checkItems.forEach(item => {
+                const checkItem = document.createElement('div');
+                checkItem.className = 'check-item';
+                checkItem.innerHTML = `
+                    <div class="check-title">
+                        ${item.id}. ${item.title}
+                        ${item.required ? '<span style="color:red;">*</span>' : ''}
+                        <div style="font-size:12px;color:#666;margin-top:2px;">${item.desc}</div>
+                    </div>
+                    <div class="check-options">
+                        <div class="option-btn option-normal" data-id="${item.id}" data-value="正常">正常</div>
+                        <div class="option-btn option-abnormal" data-id="${item.id}" data-value="异常">异常</div>
+                        <div class="option-btn option-na" data-id="${item.id}" data-value="不适用">不适用</div>
+                    </div>
+                `;
+                container.appendChild(checkItem);
+            });
+            
+            // 绑定选项点击事件
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const itemId = this.getAttribute('data-id');
+                    const value = this.getAttribute('data-value');
+                    
+                    // 清除同项目的其他选择
+                    const parent = this.parentElement;
+                    parent.querySelectorAll('.option-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    
+                    // 设置当前选择
+                    this.classList.add('selected');
+                    
+                    // 保存选择结果
+                    this.dataset.selected = 'true';
+                    
+                    // 检查是否可以提交
+                    checkSubmitAvailability();
+                });
+            });
+        }
+        
+        // 检查提交按钮状态
+        function checkSubmitAvailability() {
+            const name = document.getElementById('employee-name').value.trim();
+            const area = document.getElementById('warehouse-area').value;
+            const time = document.getElementById('check-time').value;
+            
+            // 检查必填检查项
+            let allRequiredChecked = true;
+            checkItems.forEach(item => {
+                if (item.required) {
+                    const options = document.querySelectorAll(`.option-btn[data-id="${item.id}"]`);
+                    let checked = false;
+                    options.forEach(opt => {
+                        if (opt.classList.contains('selected')) checked = true;
+                    });
+                    if (!checked) allRequiredChecked = false;
+                }
+            });
+            
+            const canSubmit = name && area && time && allRequiredChecked;
+            document.getElementById('submit-btn').disabled = !canSubmit;
+            
+            return canSubmit;
+        }
+        
+        // 初始化时间
+        document.getElementById('check-time').value = new Date().toISOString().slice(0, 16);
+        
+        // 表单提交处理
+        document.getElementById('inspection-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!checkSubmitAvailability()) {
+                alert('请完成所有必填项目！');
+                return;
+            }
+            
+            // 收集数据
+            const formData = {
+                时间: document.getElementById('check-time').value,
+                点检人: document.getElementById('employee-name').value.trim(),
+                工号: document.getElementById('employee-id').value.trim() || '未填写',
+                仓库区域: document.getElementById('warehouse-area').value,
+                备注: document.getElementById('remarks').value.trim() || '无'
+            };
+            
+            // 收集检查结果
+            checkItems.forEach(item => {
+                const selectedOption = document.querySelector(`.option-btn[data-id="${item.id}"].selected`);
+                formData[item.title] = selectedOption ? selectedOption.getAttribute('data-value') : '未检查';
+            });
+            
+            // 统计结果
+            const results = Object.values(formData).filter(val => 
+                ['正常', '异常', '不适用'].includes(val)
+            );
+            const normalCount = results.filter(r => r === '正常').length;
+            const abnormalCount = results.filter(r => r === '异常').length;
+            
+            formData['正常项数'] = normalCount;
+            formData['异常项数'] = abnormalCount;
+            formData['提交时间'] = new Date().toLocaleString('zh-CN');
+            
+            // 保存到本地存储（备份）
+            saveToLocalStorage(formData);
+            
+            // 显示成功信息
+            document.getElementById('inspection-form').style.display = 'none';
+            document.getElementById('success-message').style.display = 'block';
+            
+            const resultDetails = document.getElementById('result-details');
+            resultDetails.innerHTML = `
+                <p><strong>点检人：</strong>${formData.点检人}</p>
+                <p><strong>区域：</strong>${formData.仓库区域}</p>
+                <p><strong>结果：</strong>${normalCount}项正常，${abnormalCount}项异常</p>
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">数据已保存，感谢您的点检！</p>
+            `;
+            
+            // 尝试保存到云端
+            saveToCloud(formData);
+        });
+        
+        // 本地存储
+        function saveToLocalStorage(data) {
+            try {
+                let records = JSON.parse(localStorage.getItem('warehouseRecords')) || [];
+                records.push(data);
+                localStorage.setItem('warehouseRecords', JSON.stringify(records));
+                console.log('数据已保存到本地存储');
+            } catch (e) {
+                console.error('本地存储失败:', e);
+            }
+        }
+        
+        // 云端存储（Google Sheets）
+        function saveToCloud(data) {
+            // 这里可以使用多种云端存储方案
+            
+            // 方案1：Google Forms + Sheets（最简单）
+            submitToGoogleForm(data);
+            
+            // 方案2：Webhook到企业微信/钉钉
+            // submitToWebhook(data);
+        }
+        
+        // Google Forms 提交方案
+        function submitToGoogleForm(data) {
+            // 创建Google Form并获取提交URL
+            // 1. 创建Google Form
+            // 2. 在Form中添加对应字段
+            // 3. 获取Form的提交URL
+            // 4. 使用fetch提交数据
+            
+            const formUrl = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse';
+            
+            const formData = new FormData();
+            // 根据Google Form的字段名添加数据
+            Object.keys(data).forEach(key => {
+                formData.append(`entry.${getEntryId(key)}`, data[key]);
+            });
+            
+            fetch(formUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            }).then(() => {
+                console.log('已提交到Google Sheets');
+            }).catch(err => {
+                console.log('云端提交失败，数据已保存在本地');
+            });
+        }
+        
+        function getEntryId(fieldName) {
+            // 这里需要根据Google Form的实际字段ID进行映射
+            const mapping = {
+                '时间': '1234567890',
+                '点检人': '2345678901',
+                // ...其他字段映射
+            };
+            return mapping[fieldName] || '';
+        }
+        
+        // 实时检查表单
+        ['employee-name', 'warehouse-area', 'check-time'].forEach(id => {
+            document.getElementById(id).addEventListener('input', checkSubmitAvailability);
+        });
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initChecklist();
+            
+            // 生成二维码的URL
+            const currentUrl = window.location.href;
+            console.log('当前页面URL:', currentUrl);
+            console.log('将此URL生成二维码供员工扫描：', currentUrl);
+        });
+    </script>
+</body>
+</html>
